@@ -16,12 +16,15 @@
 //Globals (ToDo: REFACTOR)
 ros::NodeHandle nh;
 SimpleBatteryReader esc_battery{ackercito_pins::ESC_BATTERY_SENSE_PIN};
-float setpoint_throttle; //DELETE, JUST FOR TESTING
-float setpoint_steering;
+volatile float setpoint_throttle_pulse_ms = ackercito_config::MID_PULSE_THROTTLE; 
+volatile float setpoint_steering_pulse_ms = ackercito_config::MID_PULSE_STEERING;
 Servo steering;
 Servo throttle;
-uint16_t mid_steering_pulse = 1500;
-uint16_t mid_throttle_pulse = 1500;
+
+
+//Actuators control loop
+IntervalTimer motors_control_timer;
+
 
 
 void commandVelocityCallback(const geometry_msgs::Twist &cmd_vel_msg)
@@ -33,14 +36,14 @@ void commandVelocityCallback(const geometry_msgs::Twist &cmd_vel_msg)
     linear_x = constrain(linear_x, ackercito_config::MIN_LINEAR_VELOCITY, ackercito_config::MAX_LINEAR_VELOCITY);
     angular_z = constrain(angular_z, ackercito_config::MIN_ANGULAR_VELOCITY, ackercito_config::MAX_ANGULAR_VELOCITY);
 
-    setpoint_throttle = map(
+    setpoint_throttle_pulse_ms = map(
         linear_x,
         ackercito_config::MIN_LINEAR_VELOCITY,
         ackercito_config::MAX_LINEAR_VELOCITY,
         -200.0,
         200.0) + ackercito_config::MID_PULSE_THROTTLE;
 
-    setpoint_steering = map(
+    setpoint_steering_pulse_ms = map(
         angular_z,
         ackercito_config::MIN_ANGULAR_VELOCITY,
         ackercito_config::MAX_ANGULAR_VELOCITY,
@@ -50,15 +53,21 @@ void commandVelocityCallback(const geometry_msgs::Twist &cmd_vel_msg)
 
     //DEBUG.
     char buffer[50];
-    snprintf(buffer, sizeof(buffer),"Throttle: %.2f | Steering: %.2f", setpoint_throttle, setpoint_steering);
+    snprintf(buffer, sizeof(buffer),"Throttle: %.2f | Steering: %.2f", setpoint_throttle_pulse_ms, setpoint_steering_pulse_ms);
     nh.loginfo(buffer);
     //END DEBUG
 
     //TODO: STORE THE CURRENT TIME AS THE LAST TIME THAT A COMMAND WAS RECEIVED.
-    steering.writeMicroseconds(setpoint_steering);
-    throttle.writeMicroseconds(setpoint_throttle);
-
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+}
+
+
+void motors_control_callback()
+{
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    steering.writeMicroseconds(setpoint_steering_pulse_ms);
+    throttle.writeMicroseconds(setpoint_throttle_pulse_ms);
+    
 }
 
 
@@ -89,20 +98,27 @@ void wait_for_Battery(SimpleBatteryReader battery, float min_voltage)
 ros::Subscriber<geometry_msgs::Twist> cmd_vel_sub("cmd_vel", commandVelocityCallback);
 
 
+
+
+
 void setup()
 {
     nh.initNode();
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN,HIGH);
     //Block the execution of the program until detecting the ESC (Motors) battery. 
     wait_for_Battery(esc_battery, 4.0); //Wait until we sense
     nh.subscribe(cmd_vel_sub);
-    pinMode(LED_BUILTIN, OUTPUT);
+
 
     //Initialization of actuators.
     throttle.attach(ackercito_pins::THROTTLE_DRIVER_PIN);
     steering.attach(ackercito_pins::STEERING_DRIVER_PIN);
 
-    throttle.writeMicroseconds(ackercito_config::MID_PULSE_THROTTLE);
-    steering.writeMicroseconds(ackercito_config::MID_PULSE_STEERING);    
+    motors_control_timer.begin(motors_control_callback, ackercito_config::PERIOD_CONTROL_LOOP_USEC);
+
+    //throttle.writeMicroseconds(ackercito_config::MID_PULSE_THROTTLE);
+    //steering.writeMicroseconds(ackercito_config::MID_PULSE_STEERING);    
 
 }
 
