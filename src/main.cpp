@@ -21,7 +21,6 @@ volatile float setpoint_steering_pulse_ms = ackercito_config::MID_PULSE_STEERING
 Servo steering;
 Servo throttle;
 
-
 //Actuators control loop
 IntervalTimer motors_control_timer;
 
@@ -110,16 +109,11 @@ void setup()
     wait_for_Battery(esc_battery, 4.0); //Wait until we sense
     nh.subscribe(cmd_vel_sub);
 
-
     //Initialization of actuators.
     throttle.attach(ackercito_pins::THROTTLE_DRIVER_PIN);
     steering.attach(ackercito_pins::STEERING_DRIVER_PIN);
 
     motors_control_timer.begin(motors_control_callback, ackercito_config::PERIOD_CONTROL_LOOP_USEC);
-
-    //throttle.writeMicroseconds(ackercito_config::MID_PULSE_THROTTLE);
-    //steering.writeMicroseconds(ackercito_config::MID_PULSE_STEERING);    
-
 }
 
 
