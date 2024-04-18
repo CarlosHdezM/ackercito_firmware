@@ -6,6 +6,9 @@ namespace ackercito_config{
     constexpr float FREQ_CONTROL_LOOP_HZ = 50.0;
     constexpr float PERIOD_CONTROL_LOOP_USEC = 1000000.0 / ackercito_config::FREQ_CONTROL_LOOP_HZ; 
 
+    //Watchdog
+    constexpr uint16_t CMD_VEL_WATCHDOG_TIME_MS = 1000;
+
     //Limits
     constexpr float MAX_LINEAR_VELOCITY = 2.0; //ToDo: Now this is arbitrary. Make sense of this.
     constexpr float MAX_ANGULAR_VELOCITY = 2.0; //ToDo: Now this is arbitrary. Make sense of this.

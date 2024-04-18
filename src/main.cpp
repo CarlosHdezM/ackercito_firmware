@@ -20,6 +20,7 @@ volatile float setpoint_throttle_pulse_ms = ackercito_config::MID_PULSE_THROTTLE
 volatile float setpoint_steering_pulse_ms = ackercito_config::MID_PULSE_STEERING;
 Servo steering;
 Servo throttle;
+uint32_t last_time_cmd_vel_ms;
 
 //Actuators control loop
 IntervalTimer motors_control_timer;
@@ -28,6 +29,7 @@ IntervalTimer motors_control_timer;
 
 void commandVelocityCallback(const geometry_msgs::Twist &cmd_vel_msg)
 {
+    last_time_cmd_vel_ms = millis();
     nh.loginfo("Received message in cmd_vel");
     float linear_x = cmd_vel_msg.linear.x;
     float angular_z = cmd_vel_msg.angular.z;
@@ -99,7 +101,6 @@ ros::Subscriber<geometry_msgs::Twist> cmd_vel_sub("cmd_vel", commandVelocityCall
 
 
 
-
 void setup()
 {
     nh.initNode();
@@ -119,9 +120,13 @@ void setup()
 
 void loop()
 {
+    uint32_t current_time_ms = millis();
 
+    //Watchdog for cmd_vel. Reset motor speeds to zero if no new cmd_vel message is received within the specified time limit.
+    if ((current_time_ms - last_time_cmd_vel_ms) > ackercito_config::CMD_VEL_WATCHDOG_TIME_MS)
+    {
+        setpoint_throttle_pulse_ms = ackercito_config::MID_PULSE_THROTTLE; 
+        setpoint_steering_pulse_ms = ackercito_config::MID_PULSE_STEERING;
+    }
     nh.spinOnce();
-    //nh.loginfo("Logging info...");
-    //digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    //delay(1000);
 }
