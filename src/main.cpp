@@ -106,14 +106,23 @@ void setup()
     nh.initNode();
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN,HIGH);
+    
     //Block the execution of the program until detecting the ESC (Motors) battery. 
-    wait_for_Battery(esc_battery, 4.0); //Wait until we sense
+    wait_for_Battery(esc_battery, 4.0); //ToDo: Refactor this 4.0 (Volts).
+
+    //Wait for node connection with ROS
+    while (!nh.connected()) {
+        nh.spinOnce();
+    }
+    
+    
     nh.subscribe(cmd_vel_sub);
 
     //Initialization of actuators.
     throttle.attach(ackercito_pins::THROTTLE_DRIVER_PIN);
     steering.attach(ackercito_pins::STEERING_DRIVER_PIN);
 
+    //Start the periodic timer interrupt for motor control.
     motors_control_timer.begin(motors_control_callback, ackercito_config::PERIOD_CONTROL_LOOP_USEC);
 }
 
