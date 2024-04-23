@@ -48,8 +48,8 @@ void commandVelocityCallback(const geometry_msgs::Twist &cmd_vel_msg)
         angular_z,
         ackercito_config::MIN_ANGULAR_VELOCITY,
         ackercito_config::MAX_ANGULAR_VELOCITY,
-        -200.0,
-        200.0) + ackercito_config::MID_PULSE_STEERING;
+        -400.0,
+        400.0) + ackercito_config::MID_PULSE_STEERING;
 
 
     //DEBUG.

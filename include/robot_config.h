@@ -5,7 +5,7 @@ namespace ackercito_config{
     //Actuator Control Settings
     constexpr float FREQ_CONTROL_LOOP_HZ = 50.0;
     constexpr float PERIOD_CONTROL_LOOP_USEC = 1000000.0 / ackercito_config::FREQ_CONTROL_LOOP_HZ; 
-
+    
     //Watchdog
     constexpr uint16_t CMD_VEL_WATCHDOG_TIME_MS = 1000;
 

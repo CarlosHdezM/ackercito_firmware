@@ -9,5 +9,5 @@ float SimpleBatteryReader::readVoltage()
 {
     uint16_t batt_RAW = analogRead(this->reading_pin_);
     float batt_volts = batt_RAW * (3.3 / 1023.0) * ((R1_ + R2_) / R2_);
-    return batt_volts;
+    return (abs(batt_volts) > 0.5 ? batt_volts : 0.0);
 }
